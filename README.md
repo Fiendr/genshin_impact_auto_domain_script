@@ -4,6 +4,7 @@
 识别古树的YOLO预训练模型为绝缘本,草本, 水本, 火本总共2800张手动标注,(只有这几个本效果好)
 .pt文件下载:
     https://www.123684.com/s/Bqu7Td-34AQh
+(放在genshin_script_asset目录)
 使用opencv模板匹配找图, 识别小地图上视角朝向
 使用yolov8识别古树
 使用uinput模拟鼠标移动
