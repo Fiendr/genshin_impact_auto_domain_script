@@ -2,7 +2,7 @@
 全部使用硬编码(代码很烂), 识别小地图摄像机朝向借荐(抄)了better genshin impact: https://github.com/babalae/better-genshin-impact
 (ps:不会C#, 特地学了一星期opencv还是得抄, 噗!)
 识别古树的YOLO预训练模型为绝缘本,草本, 水本, 火本总共2800张手动标注,(只有这几个本效果好)
-#.pt文件下载:
+# .pt文件下载:
     https://www.123684.com/s/Bqu7Td-34AQh
 (放在genshin_script_asset目录)
 使用opencv模板匹配找图, 识别小地图上视角朝向
