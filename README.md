@@ -26,6 +26,7 @@
 #   gpu AMD RTX 6700XT rocm6.3  # 推理耗时 40ms
 #   ubuntu 22.04.5  X11
 #   机械硬盘(不推荐)
+#   python 3.11
 
 
 以下为GPT生成:
