@@ -93,11 +93,7 @@ pip install opencv-python mss torch ultralytics numpy PySide6 python-uinput pynp
 安装与配置
 克隆项目：
 
-bash
-复制
-编辑
-git clone https://github.com/yourusername/genshin-impact-automation.git
-cd genshin-impact-automation
+
 下载资源：
 
 确保将以下必要资源放置在 genshin_script_asset 目录下：
