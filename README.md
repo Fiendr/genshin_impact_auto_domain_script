@@ -1,0 +1,1 @@
+# genshin_impact_auto_domain_script
