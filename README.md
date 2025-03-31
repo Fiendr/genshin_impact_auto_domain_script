@@ -10,7 +10,7 @@
 优化了BG调整视角的逻辑(BG会在调整完视角的最后一刻鼠标会飘几个像素, 就这一下让前面的视角调整全部白做, 不知道后面他们优化了没有;
 所以我先视角朝东,再识别古树离中心的距离, 再根据距离移动, 再视角朝东, 再移动; 最多三次就行, 最后再根据古树的距离移动视角对齐)
 # 演示视频:
-    链接: https://pan.baidu.com/s/1V5R3O3JgOwstNcM63wfWZw?pwd=wwp4 提取码: wwp4
+    https://www.bilibili.com/video/BV1ZbZMYMEAN/
 
 
     
