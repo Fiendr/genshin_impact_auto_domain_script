@@ -27,7 +27,7 @@
 #   
 # 测试硬件:
     #   cpu AMD 3500X               # 推理耗时 1000ms
-    #   gpu AMD RTX 6700XT rocm6.3  # 推理耗时 40ms
+    #   gpu AMD RTX 6700XT rocm6.3  # 推理耗时 40ms    (Nvidia显卡可自行安装CUDA, 找古树总共推理7次左右)
     #   ubuntu 22.04.5  X11
     #   机械硬盘(不推荐)
     #   python 3.11
