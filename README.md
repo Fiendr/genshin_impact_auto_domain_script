@@ -26,8 +26,8 @@
     #   需要开启"临瀑之城"副本作为猎人本的跳板
 #   
 # 测试硬件:
-    #   cpu AMD 3500X               # 推理耗时 1000ms    cpu总耗时8-10秒
-    #   gpu AMD RTX 6700XT rocm6.3  # 推理耗时 40ms    gpu总耗时2秒以内 (Nvidia显卡可自行安装CUDA, 找古树总共推理7次左右)
+    #   cpu AMD 3500X               # 推理耗时 1000ms    cpu总耗时8-10秒 找古树总共推理7次
+    #   gpu AMD RTX 6700XT rocm6.3  # 推理耗时 40ms    gpu总耗时2-3秒 找古树总共推理11次 (Nvidia显卡可自行安装CUDA)
     #   ubuntu 22.04.5  X11
     #   机械硬盘(不推荐)
     #   python 3.11
