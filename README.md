@@ -16,11 +16,13 @@
     
 
 # 前置准备:
-    #   ubuntu x11(wayland未测试过,应该用不了)  
+    #    pip install opencv-python mss torch ultralytics numpy PySide6 pynput pyautogui pygame scipy
+    #    ubuntu下额外安装  python-uinput 库
+    #   ubuntu x11(wayland下mss库用不了)  
         (windows下uinput这个库用不了, 可以换罗技鼠标cpp接口,驱动下载地址:
         链接: https://pan.baidu.com/s/18fUvqcbynPfFknRHLwqsgA?pwd=d5k5 提取码: d5k5
         已在window11测试通过, 安装驱动后运行windows版py文件即可) 
-    #   队伍只有一个角色(且只能是萝莉,少女)
+    #   队伍只有一个角色(且只能是萝莉,少男,少女; 尽量选个奶妈吧, 战斗的时候还放EQ呢)
     #   没有新手任务导航提示
     #   原神窗口分辨率只能是1280x720 且默认启动位置
     #   需要开启"临瀑之城"副本作为猎人本的跳板
@@ -32,7 +34,7 @@
     #   机械硬盘(不推荐)
     #   python 3.11
 
-
+---------------------------------------------------------------------------
 以下为GPT生成:
 
 Reasoned about Genshin Impact自动化脚本
