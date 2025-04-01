@@ -16,7 +16,10 @@
     
 
 # 前置准备:
-    #   ubuntu x11(wayland未测试过,应该用不了)  (windows下uinput这个库用不了, 可以换罗技鼠标cpp接口) 
+    #   ubuntu x11(wayland未测试过,应该用不了)  
+    (windows下uinput这个库用不了, 可以换罗技鼠标cpp接口,驱动下载地址:
+    链接: https://pan.baidu.com/s/18fUvqcbynPfFknRHLwqsgA?pwd=d5k5 提取码: d5k5
+    已在window11测试通过, 安装驱动后运行windows版py文件即可) 
     #   队伍只有一个角色(且只能是萝莉,少女)
     #   没有新手任务导航提示
     #   窗口分辨率1280x720默认位置
