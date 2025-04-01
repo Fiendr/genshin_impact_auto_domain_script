@@ -909,10 +909,10 @@ def main_script():
         if isDone:
             ACCOUNT_INDEX += 1
             show_statu_queue.put("切换账号\n")
-            threads_t = []
+            threads = []
             with ThreadPoolExecutor(max_workers=1) as t:
                 threads.append(t.submit(switch_account))
-            result = threads_t[-1].result()
+            result = threads[-1].result()
             show_statu_queue.put(f":{result}")
             isDone = False
             
