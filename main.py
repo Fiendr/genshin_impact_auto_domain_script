@@ -1,23 +1,49 @@
+# 前置准备:
+#   队伍只有一个角色
+#   没有新手任务导航提示
+#   窗口分辨率1280x720默认位置
+#
+# 测试硬件:
+#   cpu AMD 3500X               # 推理耗时 1000ms   3600 500ms
+#   gpu AMD RTX 6700XT rocm6.3  # 推理耗时 40ms
+#   ubuntu 22.04.5  X11 and win11
+
 import threading
-import cv2
 import mss
 import torch
 from ultralytics import YOLO
-import time
-import datetime
-import sys
-import time
 import numpy as np
 from PySide6.QtCore import Qt, QTimer, QThread, Signal, Slot, QEventLoop
 from PySide6.QtGui import QImage, QPixmap
-from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, QPushButton
-import uinput
+from PySide6.QtWidgets import QApplication, QComboBox, QLabel, QMainWindow, QVBoxLayout, QWidget, QHBoxLayout, \
+    QPushButton
+import os
+
 import pynput
 from pynput.mouse import Button
 from concurrent.futures import ThreadPoolExecutor
 from scipy.signal import find_peaks
 from queue import Queue
 
+""" 跨平台代码 """
+if os.name == "posix":
+    import uinput
+    # 驱动级键鼠模拟
+    events = (
+        uinput.REL_X,
+        uinput.REL_Y,
+        uinput.BTN_LEFT,
+        uinput.BTN_MIDDLE,
+        uinput.BTN_RIGHT,
+    )
+    # 全局创建 uinput 设备
+    device = uinput.Device(events, name="virtual-mouse2")
+elif os.name == "nt":
+    from lg_mouse_controller import *
+    M = MoveR()
+
+
+ASSET_DIR = "genshin_script_asset"
 
 show_tree_img_queue = Queue(1000)
 show_minimap_img_queue = Queue(1000)
@@ -25,10 +51,7 @@ show_statu_queue = Queue(20)
 send_to_main_queue = Queue(5)
 send_to_walk_queue = Queue(5)
 
-# 前置准备:
-#   队伍只有一个角色
-#   没有新手任务导航提示
-
+DOMAIN_NAME = ""
 
 import pyautogui as pa
 from fiend_auto import *
@@ -41,19 +64,12 @@ thread_pool_executor = ThreadPoolExecutor(max_workers=10)
 
 kb = pynput.keyboard.Controller()
 mouse = pynput.mouse.Controller()
-# 驱动级键鼠模拟
-events = (
-    uinput.REL_X,
-    uinput.REL_Y,
-    uinput.BTN_LEFT,
-    uinput.BTN_MIDDLE,
-    uinput.BTN_RIGHT,
-)
+
 
 yolo_device = "cuda" if torch.cuda.is_available() else "cpu"
 # YOLO init 原神'绝缘草本水本火本'2800张手动标注 100epochs
-model_path = "genshin_script_asset/原神绝缘草本水本火本2800张100epochs_best.pt"
-model = YOLO(model_path)  # 禁用详细日志
+model_path = os.path.join(ASSET_DIR, "原神绝缘草本水本火本2800张100epochs_best.pt")
+model = YOLO(model_path)  # 禁用详细日志m
 model = model.to(yolo_device)
 
 # 基于1280 x 720
@@ -61,11 +77,9 @@ region_x, region_y, region_width, region_height = 320, 192, 1280, 340
 minimap_x, minimap_y, minimap_width, minimap_height = 361, 204, 142, 142
 img_center_x = region_width // 2  # 相对于图片中心X坐标
 
-# 全局创建 uinput 设备
-device = uinput.Device(events, name="virtual-mouse2")
-
 IS_CHANGED_SHUZI = False  # 是否换过树脂, 每次接收translate时判断
 DOMAIN = "绝缘本"
+                                                                                                              
 # DOMAIN = "猎人本"
 ACCOUNT_INDEX = 1
 
@@ -81,7 +95,7 @@ def play_mp3(path):
 
 
 # 音频
-mp3_nomore_shuzi = r"genshin_script_asset/nomorshuzi.mp3"
+mp3_nomore_shuzi = os.path.join(ASSET_DIR, "nomorshuzi.mp3")
 
 "坐标"
 pos_map_all = 1548, 869
@@ -90,6 +104,9 @@ pos_map_daoQi = 1292, 376
 pos_map_fendang = 1283, 445
 pos_map_fendang_domain1 = 1106, 849
 pos_map_fendang_domain2 = 753, 709
+pos_map_nata = 1470, 421
+pos_map_nata_domain = 940, 692
+pos_map_nata_domain_xialuoben = 564, 798
 
 pos_map_reduce = 349, 612  # map缩小 306,618
 pos_jueYuanBen = 427, 737
@@ -117,36 +134,41 @@ pos_map_liyue = 1489, 310  # map 璃月
 
 "图片"
 # 匹配中...
-img_pipeizhong = r"genshin_script_asset/pipeizhong.bmp"
+img_pipeizhong = os.path.join(ASSET_DIR, "pipeizhong.bmp")
 area_pipeizhong = 1146, 856, 1162, 882
-img_pipeizhong_cancel = r"genshin_script_asset/pipeizhong_cancel.bmp"
+img_pipeizhong_cancel = os.path.join(ASSET_DIR, "pipeizhong_cancel.bmp")
 area_pipeizhong_cancel = 807, 673, 930, 720
-img_2p_nobody = r"genshin_script_asset/2P_nobody.bmp"
+img_2p_nobody = os.path.join(ASSET_DIR, "2P_nobody.bmp")
 area_2p_nobody = 822, 518, 876, 577
 # 派蒙
-img_main_interface = r"genshin_script_asset/main_interface.bmp"
+img_main_interface = os.path.join(ASSET_DIR, "main_interface.bmp")
 area_main_interface = 346, 210, 372, 236
 # 组队界面 + 号
-img_team_plus = r"genshin_script_asset/team_plus.bmp"
+img_team_plus = os.path.join(ASSET_DIR, "team_plus.bmp")
 area_team_plus = 1099, 841, 1143, 896
 # 放弃挑战 死亡
-img_cancel_challenge = r"genshin_script_asset/cancel_challenge.bmp"
+img_cancel_challenge = os.path.join(ASSET_DIR, "cancel_challenge.bmp")
 area_cancel_challenge = 706, 843, 732, 872
 # N秒后自动退出 通关
-img_auto_out = r"genshin_script_asset/completed.bmp"
+img_auto_out = os.path.join(ASSET_DIR, "completed.bmp")
 area_auto_out = 923, 817, 1038, 843
 # 退出秘境
-img_out_domain = r"genshin_script_asset/out_domain.bmp"
+img_out_domain = os.path.join(ASSET_DIR, "out_domain.bmp")
 area_out_domain = 704, 832, 899, 881
 # 树脂耗尽
-img_nomore_shuzi = r"genshin_script_asset/img_nomore_shuzi.bmp"
+img_nomore_shuzi = os.path.join(ASSET_DIR, "img_nomore_shuzi.bmp")
 area_nomore_shuzi = 709, 682, 736, 713
 # 副本首页tips  "点击任意位置关闭"
-img_domain_tips = "genshin_script_asset/domain_tips.png"
+img_domain_tips = os.path.join(ASSET_DIR, "domain_tips.png")
 area_domain_tips = 878, 641, 1024, 667
 # F
-img_f = "genshin_script_asset/f.png"
+img_f = os.path.join(ASSET_DIR, "f.png")
 area_f = 1093 - 40, 641 - 101, 1117 - 40, 661 - 101
+# 地脉
+img_money = os.path.join(ASSET_DIR, "money.png")
+img_experience = os.path.join(ASSET_DIR, "experience.png")
+region_minimap = minimap_x, minimap_y, minimap_x+minimap_width, minimap_y+minimap_height
+minimap_center_x, minimap_center_y = minimap_width//2, minimap_height//2
 
 
 def finding_main_interface():
@@ -336,6 +358,31 @@ def translate_to_jueyuanben():
     finding_main_interface()
 
 
+""" 火本 """
+
+
+def translate_to_huoben():
+    time.sleep(2)
+    pa.press("m")
+    time.sleep(2)
+    pa.click(pos_map_all)
+    time.sleep(2)
+    pa.click(pos_map_mengDe)
+    time.sleep(2)
+    pa.click(pos_map_all)
+    time.sleep(2)
+    pa.click(pos_map_nata)
+    time.sleep(2)
+    for i in range(6):
+        pa.click(pos_map_reduce)
+        time.sleep(0.4)
+    pa.click(pos_map_nata_domain)
+    time.sleep(2)
+    pa.click(pos_translate)
+    # 找派蒙
+    finding_main_interface()
+
+
 """ 猎人本 """
 
 
@@ -388,8 +435,17 @@ def translate():
             change_shuzi()
             IS_CHANGED_SHUZI = True
 
-        # translate_to_jueyuanben()  # 传送绝缘本
-        translate_to_lierenben()  # 传送猎人本
+        if DOMAIN == "雷本":
+            translate_to_jueyuanben()
+        # elif DOMAIN == "草本":
+        #     translate_to_lierenben()
+        elif DOMAIN == "水本":
+            translate_to_lierenben()
+        elif DOMAIN == "火本":
+            translate_to_huoben()
+        elif DOMAIN == "":
+            print("DOMAIN empty errror")
+            exit()
 
         # 前进 一次
         pa.keyDown("w")
@@ -583,12 +639,15 @@ def switch_account():
         time.sleep(15)
     finding_main_interface()
 
-
-def mouse_move_simulate(x, y, device):
-    # 模拟鼠标移动：
-    device.emit(uinput.REL_X, x)
-    device.emit(uinput.REL_Y, y)
-    print("mouse simulate x, y", x, y)
+""" 跨平台代码 """
+def mouse_move_simulate(x, y):
+    if os.name == "posix":
+        # 模拟鼠标移动：
+        device.emit(uinput.REL_X, x)
+        device.emit(uinput.REL_Y, y)
+        print("mouse simulate x, y", x, y)
+    elif os.name == "nt":
+        M.move(int(x*1.5), int(y*1.5))
 
 
 def keyboard_press_simulate(key, delay):
@@ -598,28 +657,42 @@ def keyboard_press_simulate(key, delay):
 
 
 #################################################################################################
-def minimap_rotation():
+
+def screen_shot(x, y, width, height):
+    with mss.mss() as sct:
+        # monitor = {"top": 0, "left": 0, "width": 400, "height": 400}  用这个出错!得用下面括号里的
+        screenshot = sct.grab({'left': x,
+                               'top': y,
+                               'width': width,
+                               'height': height})
+        img = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGRA2BGR)
+        return img
+
+
+def minimap_rotation(target_angle=0):
+    back_angle = (target_angle + 180) % 360
+
     while True:
         """ 小地图朝向角度检测 """
         img_minimap = screen_shot(minimap_x, minimap_y, minimap_width, minimap_height)
-        angle = compute_mini_map_angle(img_minimap)
-        print("angle", angle)
-        img_minimap = draw_angle(img_minimap, angle)
+        current_angle = compute_mini_map_angle(img_minimap)
+        print("current_angle", current_angle)
+        img_minimap = draw_angle(img_minimap, current_angle)
         show_minimap_img_queue.put(img_minimap)
-        min_rotation = 2  # 最小旋转距离
-        if 180 > angle > 2:
-            diff_x = min(int(-((360 - angle) // 22)), -min_rotation)
-            mouse_move_simulate(diff_x, 0, device)
-            time.sleep(0.02)
-            print("angle left")
-        elif 357 > angle >= 180:
-            diff_x = max(int((angle // 22)), min_rotation)
-            mouse_move_simulate(diff_x, 0, device)
-            time.sleep(0.02)
-            print("angle right")
-        elif angle <= 2 or angle >= 357:
+        abs_diff_angle = min(abs(target_angle-current_angle), 360-abs(target_angle-current_angle))  # 绝对差
+        clockwise_diff_back_angle = (back_angle-current_angle+360) % 360    # 与背角 顺时针角度差
+        move_distance = max(int(abs_diff_angle//8), 2)
+
+        if abs_diff_angle <= 3:
             print("已朝向东方")
             break
+        elif clockwise_diff_back_angle >= 180:  
+            # 在左边, 向右移动
+            mouse_move_simulate(move_distance, 0)
+            print("angle right")
+        elif clockwise_diff_back_angle < 180: 
+            mouse_move_simulate(-move_distance, 0)
+            print("angle left")
 
 
 def get_tree_difference():
@@ -656,7 +729,7 @@ def walk_to_domain_center():
             flag, _ = send_to_walk_queue.get(timeout=0.5)
             if flag == "start_yolo":
                 print("start_yolo...")
-                # 鼠标中键回正视角 
+                # 鼠标中键回正视角
                 time.sleep(0.5)
                 mouse.press(Button.middle)
                 time.sleep(0.1)
@@ -781,7 +854,7 @@ def compute_mini_map_angle(mat):
     return angle
 
 
-def draw_angle(img, angle):
+def draw_angle(img, angle, color=(0, 255, 255)):
     if angle:
         # 在原图上绘制直线
         center = (img.shape[1] // 2, img.shape[0] // 2)
@@ -795,18 +868,7 @@ def draw_angle(img, angle):
         )
         # 使用红色（BGR: (0, 0, 255)）绘制直线，粗细为2
         img = cv2.line(img, center, end_point, (0, 0, 255), thickness=2)
-        img = cv2.putText(img, str(angle), (5, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
-        return img
-
-
-def screen_shot(x, y, width, height):
-    with mss.mss() as sct:
-        # monitor = {"top": 0, "left": 0, "width": 400, "height": 400}  用这个出错!得用下面括号里的
-        screenshot = sct.grab({'left': x,
-                               'top': y,
-                               'width': width,
-                               'height': height})
-        img = cv2.cvtColor(np.array(screenshot), cv2.COLOR_BGRA2BGR)
+        img = cv2.putText(img, str(angle), (5, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
         return img
 
 
@@ -855,9 +917,24 @@ def find_domain_tips():
 
 
 def main_script():
-    for i in range(3):  # 账号循环
-        isDone = False
+    global ACCOUNT_INDEX
+    isDone = None   # 是否切换账号 标志
+
+    for i in range(3):  # 账号循环w
+        if isDone:
+            ACCOUNT_INDEX += 1
+            show_statu_queue.put("切换账号\n")
+            threads = []
+            with ThreadPoolExecutor(max_workers=1) as t:
+                threads.append(t.submit(switch_account))
+            result = threads[-1].result()
+            show_statu_queue.put(f":{result}")
+            isDone = False
+
         for j in range(10):  # 传送循环
+            if isDone:
+                break  # 切换账号
+
             show_statu_queue.put("开始运行___\n传送组队...\n")
             threads = []
             with ThreadPoolExecutor(max_workers=1) as t:
@@ -873,7 +950,7 @@ def main_script():
                 result = threads[-1].result()
                 show_statu_queue.put(f":{result}")
 
-                # walk to F
+                # walk to Feqeqeqeqeqeq
                 show_statu_queue.put("walk to F...")
                 with ThreadPoolExecutor(max_workers=1) as t:
                     threads.append(t.submit(walk_to_f))
@@ -918,9 +995,28 @@ def main_script():
                 elif result == "done":
                     isDone = True
                     break
-            if isDone:
-                break  # 切换账号
 
+
+
+def auto_world_fight(action):
+    template_img = None
+    if action == "摩拉":
+        template_img = img_money
+    elif action == "经验":
+        template_img = img_experience
+
+    while True:
+        time.sleep(0.1)
+        img_minimap = screen_shot(minimap_x, minimap_y, minimap_width, minimap_height)
+        result = find_pic_by_img(template_img, img_minimap, 0.04)
+        print(result)
+        if result[0]:
+            img_minimap = cv2.line(img_minimap, 
+                                   (minimap_center_x, minimap_center_y),
+                                   (int(result[0]), int(result[1])),
+                                   (0,0,255),
+                                   3)
+            show_minimap_img_queue.put(img_minimap)
 
 class GetQueueQThread(QThread):
     get_tree_img_queue_signal = Signal(np.ndarray)
@@ -957,22 +1053,37 @@ class MainWindow(QMainWindow):
         # 创建 QLabel 控件用于显示视频流
         self.label_tree = QLabel(self)
         self.label_tree.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_tree.setGeometry(10, 10, 410, 80)
+        self.label_tree.setGeometry(10, 10, 300, 80)
 
         self.label_minimap = QLabel(self)
         self.label_minimap.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_minimap.setGeometry(420, 10, 80, 80)
+        self.label_minimap.setGeometry(320, 10, 80, 80)
+
+        self.button_start_script = QPushButton("自动匹配", self)
+        self.button_start_script.setGeometry(450, 10, 100, 25)
+        self.button_start_script.clicked.connect(self.start_script)
+
+        self.button_start_auto_money = QPushButton("自动地脉", self)
+        self.button_start_auto_money.setGeometry(450, 45, 100, 25)
+        self.button_start_auto_money.clicked.connect(self.start_auto_money)
+
 
         self.label_statu = QLabel(self)
-        self.label_statu.setGeometry(510, 40, 100, 50)
+        self.label_statu.setGeometry(670, 10, 120, 50)
 
-        self.button_start_script = QPushButton("开始", self)
-        self.button_start_script.setGeometry(510, 10, 100, 25)
-        self.button_start_script.clicked.connect(self.start_script)
+        self.combo_box_domain_name = QComboBox(self)
+        self.combo_box_domain_name.addItems(["雷本", "水本", "火本"])
+        self.combo_box_domain_name.setCurrentIndex(2)
+        self.combo_box_domain_name.setGeometry(560, 10, 100, 25)
+
+        self.combo_box_money_experience = QComboBox(self)
+        self.combo_box_money_experience.addItems(["摩拉", "经验"])
+        self.combo_box_money_experience.setCurrentIndex(0)
+        self.combo_box_money_experience.setGeometry(560, 45, 100, 25)
 
         # 初始化UI
         self.setWindowTitle("Genshin impact script")
-        self.setGeometry(0, 0, 620, 90)
+        self.setGeometry(0, 0, 800, 90)
 
         threading.Thread(target=walk_to_domain_center).start()
 
@@ -982,8 +1093,22 @@ class MainWindow(QMainWindow):
         self.get_queue_qthread.get_statu_queue_signal.connect(self.show_statu)
         self.get_queue_qthread.start()
 
+    def start_auto_money(self):
+        if self.button_start_auto_money.isEnabled():
+            self.button_start_auto_money.setEnabled(False)
+            if self.combo_box_money_experience.currentText() == "摩拉":
+                threading.Thread(target=auto_world_fight, args=("摩拉",)).start()
+                show_statu_queue.put("开始自动地脉...\n摩拉")
+            if self.combo_box_money_experience.currentText() == "经验":
+                threading.Thread(target=auto_world_fight, args=("经验",)).start()
+                show_statu_queue.put("开始自动地脉...\n经验")
+
     def start_script(self):
+        global DOMAIN
         if self.button_start_script.isEnabled():
+            self.combo_box_domain_name.setEnabled(False)
+            DOMAIN = self.combo_box_domain_name.currentText()
+            print(DOMAIN)
             self.button_start_script.setEnabled(False)
             threading.Thread(target=main_script).start()
 
