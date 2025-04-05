@@ -1,3 +1,4 @@
+(现已兼容windows/utuntu x11)
 本程序全部使用硬编码(代码很烂,能用就行,呵), 识别小地图摄像机朝向借荐(抄)了better genshin impact: https://github.com/babalae/better-genshin-impact
 (ps:不会C#, 特地学了一星期opencv还是得抄, 噗!)
 识别古树的YOLO预训练模型为绝缘本,草本, 水本, 火本总共2800张手动标注,(只有这几个本效果好)
@@ -16,12 +17,13 @@
     
 
 # 前置准备:
-    #    pip install opencv-python mss torch ultralytics numpy PySide6 pynput pyautogui pygame scipy
-    #    ubuntu下额外安装  python-uinput 库
+    *    pip install opencv-python mss torch ultralytics numpy PySide6 pynput pyautogui pygame scipy
+    *    ubuntu下额外安装  python-uinput 库
+    
     #   ubuntu x11(wayland下mss库用不了)  
-        (windows下uinput这个库用不了, 可以换罗技鼠标cpp接口,驱动下载地址:
+        (windows下需要下载安装罗技鼠标cpp接口,驱动下载地址:
         链接: https://pan.baidu.com/s/18fUvqcbynPfFknRHLwqsgA?pwd=d5k5 提取码: d5k5
-        已在window11测试通过, 安装驱动后运行windows版py文件即可) 
+        已在window11测试通过) 
     #   队伍只有一个角色(且只能是萝莉,少男,少女; 尽量选个奶妈吧, 战斗的时候还放EQ呢)
     #   没有新手任务导航提示
     #   原神窗口分辨率只能是1280x720 且默认启动位置
