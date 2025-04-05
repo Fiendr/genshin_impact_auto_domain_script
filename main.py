@@ -647,7 +647,7 @@ def mouse_move_simulate(x, y):
         device.emit(uinput.REL_Y, y)
         print("mouse simulate x, y", x, y)
     elif os.name == "nt":
-        M.move(int(x*1.5), int(y*1.5))
+        M.move(int(x*1.4), int(y*1.4))
 
 
 def keyboard_press_simulate(key, delay):
@@ -747,20 +747,20 @@ def walk_to_domain_center():
                     time.sleep(0.2)
 
                     # YOLO识别tree与center的距离
-                    difference, img = get_tree_difference()
-                    if not difference:
+                    distance, img = get_tree_difference()
+                    if not distance:
                         continue  # 未检测到tree
 
                     show_tree_img_queue.put(img)
-                    print("difference:", difference)
-                    delay = abs(difference) / 200
-                    if difference > 15:
+                    print("difference:", distance)
+                    delay = abs(distance) / 200
+                    if distance > 15:
                         kb.release("a")
                         time.sleep(0.1)
                         kb.press("d")
                         time.sleep(delay)
                         kb.release("d")
-                    elif difference < -15:
+                    elif distance < -15:
                         kb.release("d")
                         time.sleep(0.1)
                         kb.press("a")
@@ -780,9 +780,9 @@ def walk_to_domain_center():
 
                         for i in range(6 if yolo_device == "cuda" else 3):
                             # 视角朝向tree
-                            difference, img = get_tree_difference()
+                            distance, img = get_tree_difference()
                             show_tree_img_queue.put(img)
-                            thread_pool_executor.submit(mouse_move_simulate, difference // 5, 0, device)
+                            thread_pool_executor.submit(mouse_move_simulate, distance // 5, 0)
                         print("pause yolo...")
                         send_to_main_queue.put(("pause_yolo", None))
                         break
